@@ -1,6 +1,21 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "chunk.h"
+#include "common.h"
+#include "debug.h"
 
 int main(int argc, const char* argv[]) {
-    printf("Hello, World!\n");
+
+    Chunk chunk;
+    initChunk(&chunk);
+    int constant = addConstant(&chunk, 1.2);
+    writeChunk(&chunk,OP_CONSTANT);
+    writeChunk(&chunk,constant);
+    writeChunk(&chunk,OP_RETURN);
+    disassemble(&chunk,"Test chunk");
+    freeChunk(&chunk);
+
     return 0;
 }

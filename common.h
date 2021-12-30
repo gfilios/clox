@@ -4,7 +4,7 @@
 
 #ifndef CLOX_COMMON_H
 #define CLOX_COMMON_H
-#include <stdio.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #endif //CLOX_COMMON_H
