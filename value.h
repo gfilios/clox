@@ -6,6 +6,7 @@
 #define CLOX_VALUE_H
 
 typedef double Value;
+
 typedef struct {
     int capacity;
     int count;
