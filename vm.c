@@ -28,9 +28,9 @@ static void debug_trace_execution(){
     for (Value* slot = vm.stack;slot<vm.stackTop;slot++){
         printf("[ ");
         printValue(*slot);
-        printf(" ]\t\t\t\t\t\t\t\t// current Stack");
+        printf(" ]");
     }
-    printf("\n");
+    printf("\t\t\t\t\t\t\t\t// current Stack\n");
     disassembleInstruction(vm.chunk,(int)(vm.ip - vm.chunk->code));
 }
 
@@ -38,6 +38,13 @@ static void debug_trace_execution(){
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define BINARY_OP(op) \
+    do {                  \
+    Value b = pop();\
+    Value a = pop(); \
+    push(a op b);\
+} while (false);
+
     resetStack();
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -50,16 +57,19 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
-            case OP_NEGATE: {
-                push(-1 * pop());
-                break;
-            }
+
+            case OP_ADD : { BINARY_OP(+); break; }
+            case OP_SUBTRACT : { BINARY_OP(-); break; }
+            case OP_MULTIPLY : { BINARY_OP(*); break; }
+            case OP_DIVIDE : { BINARY_OP(/); break; }
+            case OP_NEGATE: { push(-1 * pop()); break;}
             case OP_RETURN:
                 printValue(pop());
                 printf("\n");
                 return INTERPRET_OK;
         }
     }
+#undef BINARY_OP
 #undef READ_CONSTANT
 #undef READ_BYTE
 }
