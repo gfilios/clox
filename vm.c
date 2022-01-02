@@ -7,6 +7,7 @@
 #include "value.h"
 #include <stdio.h>
 #include "debug.h"
+#include "compiler.h"
 
 VM vm;
 
@@ -14,13 +15,10 @@ static void resetStack(){
     vm.stackTop = vm.stack;
 }
 
-
 void initVM(){
-
 }
 
 void freeVM(){
-
 }
 
 static void debug_trace_execution(){
@@ -33,7 +31,6 @@ static void debug_trace_execution(){
     printf("\t\t\t\t\t\t\t\t// current Stack\n");
     disassembleInstruction(vm.chunk,(int)(vm.ip - vm.chunk->code));
 }
-
 
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
@@ -74,10 +71,9 @@ static InterpretResult run() {
 #undef READ_BYTE
 }
 
-InterpretResult interpret(Chunk* chunk){
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run();
+InterpretResult interpret(const char* source){
+    compile(source);
+    return INTERPRET_OK;
 }
 
 void push(Value value){
