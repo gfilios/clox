@@ -8,6 +8,7 @@
 #include "memory.h"
 
 
+
 void initValueArray(ValueArray* valueArray){
     valueArray->count = 0;
     valueArray->capacity = 0;
@@ -25,7 +26,7 @@ void writeValueArray(ValueArray* array, Value value){
 }
 
 void printValue(Value value){
-    printf("%g",value);
+    printf("%g", AS_NUMBER(value));
 }
 
 void freeValueArray(ValueArray* array){
