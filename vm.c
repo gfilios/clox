@@ -7,8 +7,11 @@
 #include "value.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <memory.h>
 #include "debug.h"
 #include "compiler.h"
+#include "object.h"
+#include "memory.h"
 
 VM vm;
 
@@ -17,9 +20,12 @@ static void resetStack() {
 }
 
 void initVM() {
+    resetStack();
+    vm.objects=NULL;
 }
 
 void freeVM() {
+    freeObjects();
 }
 
 static void runtimeError(const char *format, ...) {
@@ -50,8 +56,19 @@ Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
-static bool isFalsey(Value value){
-    return IS_NIL(value) ||(IS_BOOL(value) && !AS_BOOL(value));
+static bool isFalsey(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
+static void concatenate() {
+    ObjString *b = AS_STRING(pop());
+    ObjString *a = AS_STRING(pop());
+    int targetLength = a->length + b->length + 1;
+    char *chars = ALLOCATE(char,targetLength);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + (a->length), b->chars, b->length);
+    chars[targetLength] = '\0';
+    push(OBJ_VAL(takeString(chars, targetLength)));
 }
 
 static InterpretResult run() {
@@ -80,13 +97,27 @@ static InterpretResult run() {
             }
             case OP_NIL: push(NIL_VAL);
                 break;
-            case OP_TRUE:
-                push(BOOL_VAL(true));
+            case OP_TRUE:push(BOOL_VAL(true));
                 break;
-            case OP_FALSE:
-                push(BOOL_VAL(false));
+            case OP_FALSE:push(BOOL_VAL(false));
                 break;
-            case OP_ADD :BINARY_OP(NUMBER_VAL, +);
+            case OP_EQUAL: {
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VAL(valuesEqual(a, b)));
+            }
+            case OP_GREATER :BINARY_OP(BOOL_VAL, >);
+                break;
+            case OP_LESS :BINARY_OP(BOOL_VAL, <);
+                break;
+            case OP_ADD :
+                if ((IS_STRING(peek(0))) && IS_STRING(peek(1))) {
+                    concatenate();
+                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                    double b = AS_NUMBER(pop());
+                    double a = AS_NUMBER(pop());
+                    push(NUMBER_VAL(a + b));
+                }
                 break;
             case OP_SUBTRACT :BINARY_OP(NUMBER_VAL, -);
                 break;
@@ -101,8 +132,7 @@ static InterpretResult run() {
                 }
                 push(NUMBER_VAL(-1 * AS_NUMBER(pop())));
                 break;
-            case OP_NOT:
-                push(BOOL_VAL(isFalsey(pop())));
+            case OP_NOT:push(BOOL_VAL(isFalsey(pop())));
                 break;
             case OP_RETURN:printValue(pop());
                 printf("\n");
