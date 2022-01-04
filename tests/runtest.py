@@ -1,8 +1,10 @@
 import os
 import re
+import subprocess
 
 CLOX = "../cmake-build-debug/clox"
-ASSERT_PATTERN = re.compile("(.*)//(.*)")
+ASSERT_OK_PATTERN = re.compile("(.*)// ASSERT (.*)")
+ASSERT_ERR_PATTERN = re.compile("(.*)// ASSERT_ERR (.*)")
 
 
 def print_lines(header, lines):
@@ -26,37 +28,71 @@ def compare_lines(lines_exp, lines_out):
 
 
 def execute_test(testfile):
-    output = execute_lox(testfile)
-    expected = expected_result(testfile)
+    retcode, output, error = execute_lox(testfile)
+    if retcode!=0:
+        print("[FAILURE] " + testfile)
+        print(f"\t Unexpected Failure with Return Code {retcode}")
+        print(f"\t Check manual execution {CLOX} {testfile}")
+        return False
+    expected_out = expected_result(testfile, ASSERT_OK_PATTERN)
+    expected_err = expected_result(testfile, ASSERT_ERR_PATTERN)
 
-    lines_out = output.splitlines()
-    lines_exp = expected.splitlines()
+    ok_out, diff_out = compare(output, expected_out)
+    ok_err, diff_err = compare(error, expected_err)
+    if ok_out and ok_err:
+        print("[SUCCESS] " + testfile)
+        return True
+    else:
+        print("[FAILURE] " + testfile)
+        if not ok_out:
+            print("\t[FAILURE] OUTPUT COMPARE")
+            for line in diff_out:
+                print("\t", line)
+        if not ok_err:
+            print("\t[FAILURE] ERROR COMPARE")
+            for line in diff_err:
+                print("\t", line)
+        return False
+
+
+def check_none(val):
+    if val == None:
+        return ''
+    return val
+
+
+def compare(out, exp):
+    diffs = []
+    lines_out = check_none(out).splitlines()
+    lines_exp = check_none(exp).splitlines()
 
     if len(lines_exp) != len(lines_out):
-        print("\t[FAILED] Lines - expected: " + str(len(lines_exp)) + ",  Actual: " + str(len(lines_out)))
-        print_lines("Expected", lines_exp)
-        print_lines("Expected", lines_out)
+        diffs.append(
+            "\t[FAILURE] NUMBER OF LINES expected: " + str(len(lines_exp)) + ",  Actual: " + str(len(lines_out)))
+        diffs.append("\tExpected:")
+        for line in lines_exp:
+            diffs.append("\t\t>" + line)
+        diffs.append("\tActual:")
+        for line in lines_out:
+            diffs.append("\t\t>" + line)
+        return False, diffs
     else:
-        ok, diff = compare_lines(lines_exp, lines_out)
-        if ok:
-            print("[OK] " + testfile)
-        else:
-            print("[FAILED] " + testfile)
-            print_lines("Details Comparison", diff)
+        ok, diffs = compare_lines(lines_exp, lines_out)
+        return ok, diffs
 
 
 def execute_lox(testfile):
-    stream = os.popen(CLOX + " " + testfile)
-    output = stream.read()
-    stream.close()
-    return output
+    process = subprocess.run([CLOX, testfile],  stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    output = process.stdout
+    error = process.stderr
+    return process.returncode, process.stdout, process.stderr
 
 
-def expected_result(testfile):
+def expected_result(testfile, pattern):
     f = open(testfile, "r")
     result = ""
     for line in f:
-        match = ASSERT_PATTERN.match(line)
+        match = pattern.match(line)
         if match:
             if result == "":
                 result = match.group(2)
@@ -66,5 +102,5 @@ def expected_result(testfile):
 
 
 if __name__ == "__main__":
-    # expected = expected_result("chapter16/constants.lox")
-    execute_test("chapter16/constants.lox")
+    #execute_test("NONEXISTING.lox")
+    execute_test("chapter22/printTest.lox")

@@ -112,7 +112,6 @@ static bool isAlpha(char c) {
            || c == '_';
 }
 
-
 static Token number() {
 
     while (isDigit(peek())) advance();
@@ -123,7 +122,6 @@ static Token number() {
     }
     return makeToken(TOKEN_NUMBER);
 }
-
 
 static TokenType checkKeyword(int start, int length, const char* rest, TokenType returnType) {
     if (scanner.current-scanner.start==start+length                     // make sure not to match println, or classify..

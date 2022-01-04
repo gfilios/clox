@@ -1,0 +1,3 @@
+print 3+3;              // ASSERT 6
+print (3+3+3)==(12);    // ASSERT false
+print (3+3+3)==(9);    // ASSERT true

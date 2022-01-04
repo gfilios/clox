@@ -20,7 +20,7 @@
 
 void freeObjects() {
     Obj* object = vm.objects;
-    while(object->next!=NULL) {
+    while(object!=NULL) {
         Obj* next = object->next;
         freeObject(object);
         object=next;

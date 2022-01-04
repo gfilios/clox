@@ -21,7 +21,7 @@ static void resetStack() {
 
 void initVM() {
     resetStack();
-    vm.objects=NULL;
+    vm.objects = NULL;
     initTable(&vm.strings);
 }
 
@@ -67,7 +67,7 @@ static void concatenate() {
     ObjString *b = AS_STRING(pop());
     ObjString *a = AS_STRING(pop());
     int targetLength = a->length + b->length + 1;
-    char *chars = ALLOCATE(char,targetLength);
+    char *chars = ALLOCATE(char, targetLength);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + (a->length), b->chars, b->length);
     chars[targetLength] = '\0';
@@ -113,6 +113,10 @@ static InterpretResult run() {
                 break;
             case OP_LESS :BINARY_OP(BOOL_VAL, <);
                 break;
+            case OP_PRINT:
+                printValue(pop());
+                printf("\n");
+                break;
             case OP_ADD :
                 if ((IS_STRING(peek(0))) && IS_STRING(peek(1))) {
                     concatenate();
@@ -137,8 +141,8 @@ static InterpretResult run() {
                 break;
             case OP_NOT:push(BOOL_VAL(isFalsey(pop())));
                 break;
-            case OP_RETURN:printValue(pop());
-                printf("\n");
+            case OP_RETURN:
+                // EXIT INTERPRTER
                 return INTERPRET_OK;
         }
     }

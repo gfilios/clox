@@ -43,18 +43,15 @@ typedef struct {
     Precedence precedence;
 } ParseRule;
 
-
+// Forward Declarations
 static void grouping();
-
 static void unary();
-
 static void binary();
-
 static void number();
-
 static void literal();
-
 static void string();
+static void statement();
+static void declaration();
 
 ParseRule rules[] = {
         [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
@@ -113,13 +110,13 @@ static void errorAt(Token *token, const char *message) {
     if (parser.panicMode) return;
     parser.panicMode = true;
 
-    fprintf(stderr, "[line %d] Error", token->line);
+    fprintf(stderr, "[line %d] Error\n", token->line);
     if (token->type == TOKEN_EOF) {
-        fprintf(stderr, " at end");
+        fprintf(stderr, " at end\n");
     } else if (token->type == TOKEN_ERROR) {
         // nothing
     } else {
-        fprintf(stderr, " at '%.*s'", token->length, token->start);
+        fprintf(stderr, " at '%.*s'\n", token->length, token->start);
     }
     fprintf(stderr, ": %s\n", message);
     parser.hadError = true;
@@ -140,6 +137,16 @@ static void advance() {
         if (parser.current.type != TOKEN_ERROR) break;
         errorAtCurrent(parser.current.start);
     }
+}
+
+static bool check(TokenType type) {
+    return parser.current.type == type;
+}
+
+static bool match(TokenType type){
+    if (!(check(type))) return false;
+    advance();
+    return true;
 }
 
 static Chunk *currentChunck() {
@@ -208,6 +215,21 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static void printStatement(){
+    expression();
+    consume(TOKEN_SEMICOLON,"Expect ';' after value.");
+    emitByte(OP_PRINT);
+}
+
+static void statement(){
+    if (match(TOKEN_PRINT)){
+        printStatement();
+    }
+}
+static void declaration(){
+    statement();
+}
+
 static void number() {
     double value = strtod(parser.previous.start, NULL);
     emitConstant(NUMBER_VAL(value));
@@ -216,7 +238,6 @@ static void number() {
 static void string() {
     emitConstant(OBJ_VAL(copyString(parser.previous.start+1, parser.previous.length-2)));
 }
-
 
 static void grouping() {
     expression();
@@ -317,8 +338,9 @@ bool compile(const char *source, Chunk *chunk) {
     parser.panicMode = false;
 
     advance();
-    expression();
-    consume(TOKEN_EOF, "Expect end of expression");
+    while (!match(TOKEN_EOF)) {
+        declaration();
+    }
     endCompiler();
     return !parser.hadError;
 }
