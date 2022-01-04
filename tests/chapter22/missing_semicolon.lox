@@ -1,0 +1,1 @@
+print 4           // ASSERT_ERROR [line 2] Error at end: Expect ';' after value.
