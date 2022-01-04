@@ -5,6 +5,7 @@
 #ifndef CLOX_OBJECT_H
 #define CLOX_OBJECT_H
 #include "value.h"
+#include "table.h"
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
@@ -24,6 +25,7 @@ struct ObjString {
     Obj obj;
     int length;
     char* chars;
+    uint32_t hash;
 };
 
 ObjString* copyString(const char* chars, int length);
