@@ -4,3 +4,7 @@ var b="pei";
 var c=a+b;
 print c; // ASSERT Heiopei
 print b+"nlich"; // ASSERT peinlich
+b="Rappelvoll"; // Reassignemt
+print b; // ASSERT Rappelvoll
+print k; // ASSERT_ERROR Undefined variable 'k'.
+         // ASSERT_ERROR [line 9] in script
