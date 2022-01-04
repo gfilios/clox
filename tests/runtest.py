@@ -16,6 +16,7 @@ if __name__ == "__main__":
     print("============================================================== RUNNING TESTS")
     run_test("chapter22/expressions.lox")
     run_test("chapter22/missing_semicolon.lox")
+    run_test("chapter22/globalvars.lox")
     print("============================================================== SUMMARY")
     print(f"Total Tests: {count}, Success: {success}, Failures: {count-success}")
     print("==============================================================")

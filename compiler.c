@@ -45,13 +45,25 @@ typedef struct {
 
 // Forward Declarations
 static void grouping();
+
 static void unary();
+
 static void binary();
+
 static void number();
+
 static void literal();
+
 static void string();
+
 static void statement();
+
 static void declaration();
+
+static void advance();
+
+static void variable();
+
 
 ParseRule rules[] = {
         [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
@@ -73,7 +85,7 @@ ParseRule rules[] = {
         [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARISON},
         [TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
         [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
-        [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+        [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
         [TOKEN_STRING] = {string, NULL, PREC_NONE},
         [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
         [TOKEN_AND] = {NULL, NULL, PREC_NONE},
@@ -130,6 +142,26 @@ static void errorAtCurrent(const char *message) {
     errorAt(&parser.current, message);
 }
 
+static void synchronize() {
+    parser.panicMode = false;
+
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON) return;
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_PRINT:
+            case TOKEN_VAR:
+            case TOKEN_FUN:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_RETURN:return;
+            default:;// Do Nothing
+        }
+        advance();
+    }
+}
+
 static void advance() {
     parser.previous = parser.current;
     for (;;) {
@@ -143,7 +175,7 @@ static bool check(TokenType type) {
     return parser.current.type == type;
 }
 
-static bool match(TokenType type){
+static bool match(TokenType type) {
     if (!(check(type))) return false;
     advance();
     return true;
@@ -215,19 +247,59 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
-static void printStatement(){
+static void printStatement() {
     expression();
-    consume(TOKEN_SEMICOLON,"Expect ';' after value.");
+    consume(TOKEN_SEMICOLON, "Expect ';' after value.");
     emitByte(OP_PRINT);
 }
 
-static void statement(){
-    if (match(TOKEN_PRINT)){
+static void expressionStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
+    emitByte(OP_POP);
+}
+
+static void statement() {
+    if (match(TOKEN_PRINT)) {
         printStatement();
+    } else {
+        expressionStatement();
     }
 }
-static void declaration(){
-    statement();
+
+static uint8_t identifierConstant(Token* name){
+    uint8_t index = makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+    return index;
+}
+
+static uint8_t parseVariable(const char* errorMessage){
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    uint8_t index = identifierConstant(&parser.previous);
+    return index;
+}
+
+static void defineVariable(uint8_t constant_global_index){
+    emitBytes(OP_DEFINE_GLOBAL, constant_global_index);
+}
+
+static void varDeclaration(){
+    uint8_t constant_global_index = parseVariable("Expect variable Name");
+    if (match(TOKEN_EQUAL)){
+        expression();
+    } else {
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON,"Expect ';' after variable declaration.");
+    defineVariable(constant_global_index);
+}
+
+static void declaration() {
+    if (match(TOKEN_VAR)){
+        varDeclaration();
+    } else {
+        statement();
+    }
+    if (parser.panicMode) synchronize();
 }
 
 static void number() {
@@ -236,7 +308,16 @@ static void number() {
 }
 
 static void string() {
-    emitConstant(OBJ_VAL(copyString(parser.previous.start+1, parser.previous.length-2)));
+    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
+static void namedVariable(Token name){
+    uint8_t named_variable_index = identifierConstant(&name);
+    emitBytes(OP_GET_GLOBAL, named_variable_index);
+}
+
+static void variable() {
+    namedVariable(parser.previous);
 }
 
 static void grouping() {
@@ -314,14 +395,11 @@ static void binary() {
 
 static void literal() {
     switch (parser.previous.type) {
-        case TOKEN_FALSE:
-            emitByte(OP_FALSE);
+        case TOKEN_FALSE:emitByte(OP_FALSE);
             break;
-        case TOKEN_TRUE:
-            emitByte(OP_TRUE);
+        case TOKEN_TRUE:emitByte(OP_TRUE);
             break;
-        case TOKEN_NIL:
-            emitByte(OP_NIL);
+        case TOKEN_NIL:emitByte(OP_NIL);
             break;
         default: return;
     }

@@ -1,0 +1,6 @@
+var a="Heio";
+print a; // ASSERT Heio
+var b="pei";
+var c=a+b;
+print c; // ASSERT Heiopei
+print b+"nlich"; // ASSERT peinlich
