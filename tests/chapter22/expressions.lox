@@ -6,4 +6,8 @@ print 3>3;   // ASSERT false
 print 3>=3;  // ASSERT true
 print 3>2;   // ASSERT true
 print 3>2;   // ASSERT true
-
+print !true; // ASSERT false
+print !false; // ASSERT true
+print !( 5 - 4 > 3 * 2 == ! nil ); // ASSERT true
+print -false;   // ASSERT_ERROR Operand must be a number.
+                // ASSERT_ERROR [line 12] in script
