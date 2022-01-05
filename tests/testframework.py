@@ -3,8 +3,8 @@ import re
 import subprocess
 
 CLOX = "../cmake-build-debug/clox"
-ASSERT_OK_PATTERN = re.compile("(.*)// ASSERT (.*)")
-ASSERT_ERR_PATTERN = re.compile("(.*)// ASSERT_ERROR (.*)")
+ASSERT_OK_PATTERN = re.compile("(.*)// ASSERT (.*)",  re.IGNORECASE)
+ASSERT_ERR_PATTERN = re.compile("(.*)// ASSERT_ERROR (.*)", re.IGNORECASE)
 
 
 def print_lines(header, lines):
