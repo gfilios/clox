@@ -1,0 +1,4 @@
+{
+    var b=1;
+    var b=2; // assert_error [line 3] Error at 'b': Already a variable with this name in scope
+}
