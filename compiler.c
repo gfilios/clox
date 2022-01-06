@@ -216,6 +216,23 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte2);
 }
 
+static int emitJump(uint8_t instruction) {
+    emitByte(instruction);
+    emitByte(0xff);         // Place Holder  16 Bit 2 x 8 Bit
+    emitByte(0xff);         // Place Holder
+    return currentChunck()->count - 2;
+}
+
+static void patchJump(int offset) {
+    // - 2 to adjust for the bytecode for the jump instruction itself
+    int jump = currentChunck()->count - offset - 2;
+    if (jump > UINT16_MAX) {
+        error("To much code to jump over.");
+    }
+    currentChunck()->code[offset] = (jump >> 8) & 0xff;
+    currentChunck()->code[offset + 1] = (jump) & 0xff;
+}
+
 static void emitReturn() {
     emitByte(OP_RETURN);
 }
@@ -279,6 +296,23 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+static void ifStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP); // Pop the conditional expression from the stack
+    statement();
+    int elseJump = emitJump(OP_JUMP);
+    patchJump(thenJump);
+    emitByte(OP_POP); // Pop the conditional expression from the stack
+    if (match(TOKEN_ELSE)) {
+        statement();
+    }
+    patchJump(elseJump);
+}
+
 static void expressionStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
@@ -310,6 +344,8 @@ static void endScope() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_IF)) {
+        ifStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();
@@ -338,9 +374,9 @@ static uint8_t identifierConstant(Token *name) {
 static bool identifiersEqual(Token *a, Token *b) {
     if (a->length != b->length) return false;
     int result = memcmp(a->start, b->start, a->length);
-    if (result==0) {
+    if (result == 0) {
         return true;
-    }else {
+    } else {
         return false;
     }
 
@@ -350,7 +386,7 @@ static void declareVariable() {
     if (current->scopeDepth == 0) return; // Ignore Global - Only Local Variables are put on Stack
     Token *name = &parser.previous;
 
-    for (int i=0; i < current->localCount; i++) {
+    for (int i = 0; i < current->localCount; i++) {
         Local *local = &current->locals[i];
         if (local->depth != -1 && local->depth < current->scopeDepth) {
             break;
@@ -371,9 +407,9 @@ static uint8_t parseVariable(const char *errorMessage) {
     return index;
 }
 
-static void markInitialized(){
-    if (current->scopeDepth>0) {
-        current->locals[current->localCount-1].depth=current->scopeDepth;
+static void markInitialized() {
+    if (current->scopeDepth > 0) {
+        current->locals[current->localCount - 1].depth = current->scopeDepth;
     }
 }
 
@@ -384,7 +420,6 @@ static void defineVariable(uint8_t constant_global_index) {
     }
     emitBytes(OP_DEFINE_GLOBAL, constant_global_index);
 }
-
 
 
 static void varDeclaration() {
@@ -421,7 +456,7 @@ static int resolveLocal(Compiler compiler, Token *name) {
     for (int i = compiler.localCount - 1; i >= 0; i--) {
         Local *local = &compiler.locals[i];
         if (identifiersEqual(&local->name, name)) {
-            if (local->depth==-1) {
+            if (local->depth == -1) {
                 error("Can't read local variable in its own initializer.");
             }
             return i;
