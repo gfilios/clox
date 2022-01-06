@@ -10,6 +10,7 @@ print a;        // ASSERT 1
         a=7;
         print a;    // assert 7
         print b;    // assert 5
+        print 7*(6+b);  // assert 77
     }
     print a;    // ASSERT 2
 }
