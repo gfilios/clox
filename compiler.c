@@ -337,12 +337,17 @@ static uint8_t identifierConstant(Token *name) {
 
 static bool identifiersEqual(Token *a, Token *b) {
     if (a->length != b->length) return false;
-    return memcmp(a, b, a->length) == 0;
+    int result = memcmp(a->start, b->start, a->length);
+    if (result==0) {
+        return true;
+    }else {
+        return false;
+    }
 
 }
 
 static void declareVariable() {
-    if (current->scopeDepth == 0) return; // Local Variables are put on Stack
+    if (current->scopeDepth == 0) return; // Ignore Global - Only Local Variables are put on Stack
     Token *name = &parser.previous;
 
     for (int i=0; i < current->localCount; i++) {

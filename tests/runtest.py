@@ -19,6 +19,7 @@ if __name__ == "__main__":
     run_test("chapter22/globalvars.lox")
     run_test("chapter22/invalidassignment.lox")
     run_test("chapter22/localvars.lox")
+    run_test("chapter22/simplelocal.lox")
     run_test("chapter22/localvarerrors_1.lox")
     run_test("chapter22/localvarerrors_2.lox")
     print("============================================================== SUMMARY")

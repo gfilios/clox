@@ -5,6 +5,9 @@ print a;        // ASSERT 1
     {
         var a=3;
         print a;    // assert 3
+        var b=5;
+        print a;    // assert 3
+        print b;    // assert 5
     }
     print a;    // ASSERT 2
 }
