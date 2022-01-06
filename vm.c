@@ -48,13 +48,13 @@ static void runtimeError(const char *format, ...) {
 }
 
 static void debug_trace_execution() {
-    printf(" ");
+    printf("          STACK [");
+    int i=0;
     for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
-        printf("[ ");
+        printf("%s",i++>0?",":"");
         printValue(*slot);
-        printf(" ]");
     }
-    printf("\t\t\t\t\t\t\t\t// current Stack\n");
+    printf("]\n");
     disassembleInstruction(vm.chunk, (int) (vm.ip - vm.chunk->code));
 }
 
@@ -91,6 +91,9 @@ static InterpretResult run() {
     } while (false);
 
     resetStack();
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("\n==== TRACE ====\n");
+#endif
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         debug_trace_execution();
