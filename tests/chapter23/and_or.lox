@@ -1,0 +1,13 @@
+print (true or false); // assert true
+print (true or true); // assert true
+print (false or true); // assert true
+print (false or false); // assert false
+
+print (true and false); // assert false
+print (true and true); // assert true
+print (false and true); // assert false
+print (false and false); // assert false
+
+print (true and true or false); // assert true
+print (true and false or true); // assert true
+print (false and false or true); // assert true

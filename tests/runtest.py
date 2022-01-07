@@ -23,6 +23,7 @@ if __name__ == "__main__":
     run_test("chapter22/localvarerrors_1.lox")
     run_test("chapter22/localvarerrors_2.lox")
     run_test("chapter23/ifthenelse.lox")
+    run_test("chapter23/and_or.lox")
     print("============================================================== SUMMARY")
     print(f"Total Tests: {count}, Success: {success}, Failures: {count-success}")
     print("==============================================================")
