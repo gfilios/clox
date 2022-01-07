@@ -25,6 +25,7 @@ if __name__ == "__main__":
     run_test("chapter23/ifthenelse.lox")
     run_test("chapter23/and_or.lox")
     run_test("chapter23/while.lox")
+    run_test("chapter23/forloop.lox")
     print("============================================================== SUMMARY")
     print(f"Total Tests: {count}, Success: {success}, Failures: {count-success}")
     print("==============================================================")

@@ -1,0 +1,32 @@
+for (var i=0;i<10;i=i+1) {
+    print i;
+}
+// assert 0
+// assert 1
+// assert 2
+// assert 3
+// assert 4
+// assert 5
+// assert 6
+// assert 7
+// assert 8
+// assert 9
+
+var b=0;
+for (;b<3;b=b+1) {
+    print b;
+}
+// assert 0
+// assert 1
+// assert 2
+
+
+for (var c=0;c<3;c=c+1) {
+    print c;
+}
+print c;
+// assert 0
+// assert 1
+// assert 2
+// assert_error Undefined variable 'c'.
+// assert_error [line 27] in script

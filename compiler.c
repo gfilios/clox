@@ -74,9 +74,17 @@ static void string(bool canAssign);
 
 static void statement();
 
+static void expressionStatement();
+
+static void varDeclaration();
+
 static void declaration();
 
 static void advance();
+
+static void beginScope();
+
+static void endScope();
 
 static void variable(bool canAssign);
 
@@ -319,9 +327,9 @@ static void ifStatement() {
 
 static void emitLoop(int loopStart) {
     emitByte(OP_LOOP);
-    int offset = currentChunck()->count-loopStart+2;
-    if (offset>UINT16_MAX) error("Loop body too large.");
-    emitByte((offset>>8) & 0xff);
+    int offset = currentChunck()->count - loopStart + 2;
+    if (offset > UINT16_MAX) error("Loop body too large.");
+    emitByte((offset >> 8) & 0xff);
     emitByte(offset & 0xff);
 }
 
@@ -338,6 +346,48 @@ static void whileStatement() {
 
     patchJump(exitJump);
     emitByte(OP_POP);
+}
+
+static void forStatement() {
+    beginScope();
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+
+    if (match(TOKEN_SEMICOLON)) {
+        // NO
+    } else if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        expressionStatement();
+    }
+    int loopStart = currentChunck()->count;
+
+    int exitJump = -1;
+    if (!match(TOKEN_SEMICOLON)){
+        expression();
+        consume(TOKEN_SEMICOLON,"Expect ';' after loop condition.");
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);
+    }
+    if (!match(TOKEN_RIGHT_PAREN)){
+        int bodyJump = emitJump(OP_JUMP);
+        int incrementJump = currentChunck()->count;
+        expression();
+        emitByte(OP_POP);
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+        emitLoop(loopStart);
+        loopStart = incrementJump;
+        patchJump(bodyJump);
+    }
+
+    statement();
+    emitLoop(loopStart);
+
+    if (exitJump!=-1){
+        patchJump(exitJump);
+        emitByte(OP_POP);
+    }
+
+    endScope();
 }
 
 static void expressionStatement() {
@@ -375,6 +425,8 @@ static void statement() {
         ifStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();
