@@ -484,7 +484,7 @@ static void declareVariable() {
     if (current->scopeDepth == 0) return; // Ignore Global - Only Local Variables are put on Stack
     Token *name = &parser.previous;
 
-    for (int i = 0; i < current->localCount; i++) {
+    for (int i = current->localCount-1; i>=0; i--) {
         Local *local = &current->locals[i];
         if (local->depth != -1 && local->depth < current->scopeDepth) {
             break;

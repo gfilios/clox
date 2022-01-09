@@ -95,7 +95,7 @@ static InterpretResult run() {
         }                                                \
     } while (false);
 
-//    resetStack();
+
 #ifdef DEBUG_TRACE_EXECUTION
     printf("\n==== TRACE ====\n");
 #endif
