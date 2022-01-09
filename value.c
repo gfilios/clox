@@ -25,18 +25,6 @@ void writeValueArray(ValueArray *array, Value value) {
     array->count++;
 }
 
-void printObject(Value value) {
-
-    switch (OBJ_TYPE(value)) {
-        case OBJ_STRING:
-            printf("%s", AS_CSTRING(value));
-            break;
-        default: return;
-    }
-    if (IS_STRING(value)) {
-
-    }
-}
 
 void printValue(Value value) {
     switch (value.type) {

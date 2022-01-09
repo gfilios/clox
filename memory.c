@@ -14,11 +14,18 @@
              FREE(ObjString, obj);
              break;
          }
+         case (OBJ_FUNCTION): {
+             ObjFunction * function = (ObjFunction*)obj;
+             freeChunk(&function->chunk);
+             FREE(ObjFunction, function);
+             break;
+         }
 
      }
  }
 
-void freeObjects() {
+
+ void freeObjects() {
     Obj* object = vm.objects;
     while(object!=NULL) {
         Obj* next = object->next;
