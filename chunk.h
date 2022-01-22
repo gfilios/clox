@@ -27,6 +27,7 @@ typedef enum {
     OP_LOOP,
     OP_JUMP_IF_FALSE,
     OP_POP,
+    OP_CALL,
     OP_DEFINE_GLOBAL,
     OP_GET_GLOBAL,
     OP_SET_GLOBAL,
